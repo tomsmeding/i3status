@@ -187,13 +187,30 @@ void print_cpu_usage(yajl_gen json_gen, char *buffer, const char *format, const 
             sscanf(walk + 1, "cpu%d%n", &number, &length);
             if (number == -1) {
                 fprintf(stderr, "i3status: provided CPU number cannot be parsed\n");
-            } else if (number >= cpu_count) {
+            } else if (number < 0 || number >= cpu_count) {
                 fprintf(stderr, "i3status: provided CPU number '%d' above detected number of CPU %d\n", number, cpu_count);
             } else {
                 int cpu_diff_idle = curr_cpus[number].idle - prev_cpus[number].idle;
                 int cpu_diff_total = curr_cpus[number].total - prev_cpus[number].total;
                 int cpu_diff_usage = (cpu_diff_total ? (1000 * (cpu_diff_total - cpu_diff_idle) / cpu_diff_total + 5) / 10 : 0);
                 outwalk += sprintf(outwalk, "%02d%s", cpu_diff_usage, pct_mark);
+            }
+            walk += length;
+        } else if (BEGINS_WITH(walk + 1, "cbar")) {
+            int number = -1;
+            int length = strlen("cbar");
+            sscanf(walk + 1, "cbar%d%n", &number, &length);
+            if (number == -1) {
+                fprintf(stderr, "i3status: provided cbar CPU number cannot be parsed\n");
+            } else if (number < 0 || number >= cpu_count) {
+                fprintf(stderr, "i3status: provided cbar CPU number '%d' above detected number of CPU %d\n", number, cpu_count);
+            } else {
+                int cpu_diff_idle = curr_cpus[number].idle - prev_cpus[number].idle;
+                int cpu_diff_total = curr_cpus[number].total - prev_cpus[number].total;
+                int cpu_diff_usage = (cpu_diff_total ? (1000 * (cpu_diff_total - cpu_diff_idle) / cpu_diff_total + 5) / 10 : 0);
+                const char *box_chars[8] = {"▁", "▂", "▃", "▄", "▅", "▆", "▇", "█"};
+                int index = (cpu_diff_usage + 10) / 15;
+                outwalk += sprintf(outwalk, "%s", box_chars[index]);
             }
             walk += length;
         }
